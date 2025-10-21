@@ -12,8 +12,12 @@ namespace GraphicsEditor.Models
         [ObservableProperty]
         private double y;
 
-        [ObservableProperty]
-        private double angle;
+        private double _angle;
+        public double Angle
+        {
+            get => _angle;
+            set => SetProperty(ref _angle, value);
+        }
 
         public BitmapImage ImageSource { get; set; }
         public double Width { get; set; }

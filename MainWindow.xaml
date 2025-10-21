@@ -25,18 +25,22 @@
 
             <Button Content="Save"
                     Margin="5"/>
+
+            <Button Content="Rot right"
+                    Command="{Binding RotateImageCommand}"
+                    Margin="5"/>
         </ToolBar>
 
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <Canvas Background="White" Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
-
                 <Image Source="{Binding CurrentImage.ImageSource}" 
                        Width="{Binding CurrentImage.Width}" 
                        Height="{Binding CurrentImage.Height}"
                        Canvas.Left="20"
                        Canvas.Top="20"
                        Canvas.Right="20"
-                       Canvas.Bottom="20">
+                       Canvas.Bottom="20"
+                       RenderTransformOrigin="0.5,0.5">
 
                     <Image.RenderTransform>
                         <TransformGroup>
@@ -44,6 +48,7 @@
                         </TransformGroup>
                     </Image.RenderTransform>
                 </Image>
+                
             </Canvas>
         </ScrollViewer>
     </Grid>

@@ -21,6 +21,7 @@ namespace GraphicEditor.ViewModels
         }
 
 
+        public RelayCommand RotateImageCommand {  get; set; }
         public RelayCommand AddImageCommand { get; set; }
         public RelayCommand ClearImageCommand { get; set; }
 
@@ -45,6 +46,7 @@ namespace GraphicEditor.ViewModels
         public MainViewModel()
         {
             AddImageCommand = new RelayCommand(AddImage);
+            RotateImageCommand = new RelayCommand(RotateImage);
             ClearImageCommand = new RelayCommand(ClearImage, () => HasImage);
         }
 
@@ -83,6 +85,11 @@ namespace GraphicEditor.ViewModels
 
             ClearImageCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(HasImage));
+        }
+
+        private void RotateImage()
+        {
+            CurrentImage.Angle = (CurrentImage.Angle + 90) % 360;
         }
 
         private void ResizeCanvasToImage(CanvasImage image)
