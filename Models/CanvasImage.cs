@@ -7,16 +7,13 @@ namespace GraphicsEditor.Models
     public partial class CanvasImage : ObservableObject 
     {
         [ObservableProperty]
-        private double _x;
+        private double x;
 
         [ObservableProperty]
-        private double _y;
+        private double y;
 
         [ObservableProperty]
-        private double _scale = 1.0;
-
-        [ObservableProperty]
-        private double _angle;
+        private double angle;
 
         public BitmapImage ImageSource { get; set; }
         public double Width { get; set; }
