@@ -4,46 +4,104 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GraphicsEditor"
+        xmlns:vm="clr-namespace:GraphicsEditor.ViewModels"
         mc:Ignorable="d"
         Title="Graphics Editor" Height="600" Width="800">
 
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <ToolBar>
-            <Button Content="Add image"
-                    Command="{Binding AddImageCommand}"
-                    Margin="5"/>
+        <!-- Панель инструментов -->
+        <ToolBar Grid.Row="0">
+            <Button Command="{Binding AddImageCommand}" ToolTip="Добавить изображение">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Добавить" Margin="5,0,0,0"/>
+                </StackPanel>
+            </Button>
 
-            <Button Content="Save"
-                    Margin="5"/>
+            <Button Command="{Binding RotateImageCommand}" ToolTip="Повернуть изображение">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Повернуть" Margin="5,0,0,0"/>
+                </StackPanel>
+            </Button>
 
-            <Button Content="Rot right"
-                    Command="{Binding RotateImageCommand}"
-                    Margin="5"/>
+            <Separator/>
+
+            <Button Command="{Binding BrushCommand}" ToolTip="Кисть">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🖌️" FontSize="14"/>
+                    <TextBlock Text="Кисть" Margin="5,0,0,0"/>
+                </StackPanel>
+            </Button>
+
+            <Button Command="{Binding EraserCommand}" ToolTip="Ластик">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🧹" FontSize="14"/>
+                    <TextBlock Text="Ластик" Margin="5,0,0,0"/>
+                </StackPanel>
+            </Button>
+
+            <Separator/>
+
+            <Button Command="{Binding SelectColorCommand}" CommandParameter="Red" ToolTip="Красный">
+                <Rectangle Fill="Red" Width="20" Height="20"/>
+            </Button>
+
+            <Button Command="{Binding SelectColorCommand}" CommandParameter="Blue" ToolTip="Синий">
+                <Rectangle Fill="Blue" Width="20" Height="20"/>
+            </Button>
+
+            <Button Command="{Binding SelectColorCommand}" CommandParameter="Green" ToolTip="Зеленый">
+                <Rectangle Fill="Green" Width="20" Height="20"/>
+            </Button>
+
+            <Button Command="{Binding SelectColorCommand}" CommandParameter="Yellow" ToolTip="Желтый">
+                <Rectangle Fill="Yellow" Width="20" Height="20"/>
+            </Button>
+
+            <Button Command="{Binding SelectColorCommand}" CommandParameter="Purple" ToolTip="Фиолетовый">
+                <Rectangle Fill="Purple" Width="20" Height="20"/>
+            </Button>
+
+            <Separator/>
+
+            <TextBlock Text="Размер:" VerticalAlignment="Center"/>
+            <Slider Value="{Binding BrushSize}" 
+                    Minimum="1" 
+                    Maximum="20" 
+                    Width="100"/>
+            <TextBlock Text="{Binding BrushSize, StringFormat={}{0:F0}}"/>
         </ToolBar>
 
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <InkCanvas Background="White" Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
+        <!-- Область рисования -->
+        <ScrollViewer Grid.Row="1" 
+                      HorizontalScrollBarVisibility="Auto" 
+                      VerticalScrollBarVisibility="Auto">
+
+            <InkCanvas x:Name="MainInkCanvas"
+                       Background="White" 
+                       Width="{Binding CanvasWidth}" 
+                       Height="{Binding CanvasHeight}">
+
                 <Image Source="{Binding CurrentImage.ImageSource}" 
                        Width="{Binding CurrentImage.Width}" 
                        Height="{Binding CurrentImage.Height}"
                        Canvas.Left="20"
                        Canvas.Top="20"
-                       Canvas.Right="20"
-                       Canvas.Bottom="20"
                        RenderTransformOrigin="0.5,0.5">
-
+                    
                     <Image.RenderTransform>
-                        <TransformGroup>
-                            <RotateTransform Angle="{Binding CurrentImage.Angle}"/>
-                        </TransformGroup>
+                        <RotateTransform Angle="{Binding CurrentImage.Angle}"/>
                     </Image.RenderTransform>
                 </Image>
-                
+
             </InkCanvas>
         </ScrollViewer>
     </Grid>

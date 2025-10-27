@@ -1,34 +1,76 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace GraphicsEditor.Models
 {
-    public partial class CanvasImage : ObservableObject 
+    public class CanvasImage : INotifyPropertyChanged
     {
-        [ObservableProperty]
-        private double x;
-
-        [ObservableProperty]
-        private double y;
-
+        private ImageSource _imageSource;
+        private double _width;
+        private double _height;
         private double _angle;
+
+        public ImageSource ImageSource
+        {
+            get => _imageSource;
+            set
+            {
+                _imageSource = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double Width
+        {
+            get => _width;
+            set
+            {
+                _width = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double Height
+        {
+            get => _height;
+            set
+            {
+                _height = value;
+                OnPropertyChanged();
+            }
+        }
+
         public double Angle
         {
             get => _angle;
-            set => SetProperty(ref _angle, value);
+            set
+            {
+                _angle = value;
+                OnPropertyChanged();
+            }
         }
-
-        public BitmapImage ImageSource { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
 
         public CanvasImage(string imagePath)
         {
-            ImageSource = new BitmapImage(new Uri(imagePath));
-            Width = ImageSource.PixelWidth;
-            Height = ImageSource.PixelHeight;
+            var bitmap = new BitmapImage(new System.Uri(imagePath));
+            ImageSource = bitmap;
+            Width = bitmap.PixelWidth;
+            Height = bitmap.PixelHeight;
+            Angle = 0;
+        }
+
+        public CanvasImage()
+        {
+            Angle = 0;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
-

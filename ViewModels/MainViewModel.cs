@@ -2,16 +2,13 @@
 using CommunityToolkit.Mvvm.Input;
 using GraphicsEditor.Models;
 using Microsoft.Win32;
-using System.Collections.ObjectModel;
-using System.Security.Cryptography;
 using System.Windows;
-using System.Windows.Input;
-using System.Xml.Linq;
+using System.Windows.Ink;
+using System.Windows.Media;
 
-
-namespace GraphicEditor.ViewModels
+namespace GraphicsEditor.ViewModels
 {
-    public partial class MainViewModel : ObservableObject
+    public class MainViewModel : ObservableObject
     {
         private CanvasImage _currentImage;
         public CanvasImage CurrentImage
@@ -20,11 +17,37 @@ namespace GraphicEditor.ViewModels
             set => SetProperty(ref _currentImage, value);
         }
 
+        private DrawingAttributes _drawingAttributes;
+        public DrawingAttributes DrawingAttributes
+        {
+            get => _drawingAttributes;
+            set => SetProperty(ref _drawingAttributes, value);
+        }
 
-        public RelayCommand RotateImageCommand {  get; set; }
-        public RelayCommand AddImageCommand { get; set; }
-        public RelayCommand ClearImageCommand { get; set; }
+        private bool _isEraserMode = false;
+        public bool IsEraserMode
+        {
+            get => _isEraserMode;
+            set => SetProperty(ref _isEraserMode, value);
+        }
 
+        private SolidColorBrush _currentColorBrush;
+        public SolidColorBrush CurrentColorBrush
+        {
+            get => _currentColorBrush;
+            set => SetProperty(ref _currentColorBrush, value);
+        }
+
+        private double _brushSize = 3;
+        public double BrushSize
+        {
+            get => _brushSize;
+            set
+            {
+                SetProperty(ref _brushSize, value);
+                UpdateDrawingAttributes();
+            }
+        }
 
         private double _canvasWidth = 1920;
         public double CanvasWidth
@@ -32,7 +55,6 @@ namespace GraphicEditor.ViewModels
             get => _canvasWidth;
             set => SetProperty(ref _canvasWidth, value);
         }
-
 
         private double _canvasHeight = 1080;
         public double CanvasHeight
@@ -43,11 +65,83 @@ namespace GraphicEditor.ViewModels
 
         public bool HasImage => CurrentImage != null;
 
+        public RelayCommand AddImageCommand { get; }
+        public RelayCommand RotateImageCommand { get; }
+        public RelayCommand ClearImageCommand { get; }
+        public RelayCommand<string> SelectColorCommand { get; }
+        public RelayCommand BrushCommand { get; }
+        public RelayCommand EraserCommand { get; }
+
         public MainViewModel()
         {
+            InitializeDrawingTools();
+
             AddImageCommand = new RelayCommand(AddImage);
-            RotateImageCommand = new RelayCommand(RotateImage);
+            RotateImageCommand = new RelayCommand(RotateImage, () => HasImage);
             ClearImageCommand = new RelayCommand(ClearImage, () => HasImage);
+            SelectColorCommand = new RelayCommand<string>(SelectColor);
+            BrushCommand = new RelayCommand(SwitchToBrush);
+            EraserCommand = new RelayCommand(SwitchToEraser);
+        }
+
+        private void InitializeDrawingTools()
+        {
+            DrawingAttributes = new DrawingAttributes
+            {
+                Color = Colors.Blue,
+                Width = BrushSize,
+                Height = BrushSize,
+                FitToCurve = true
+            };
+
+            CurrentColorBrush = new SolidColorBrush(Colors.Blue);
+        }
+
+        private void SelectColor(string colorName)
+        {
+            Color color = Colors.Blue;
+
+            switch (colorName?.ToLower())
+            {
+                case "red":
+                    color = Colors.Red;
+                    break;
+                case "blue":
+                    color = Colors.Blue;
+                    break;
+                case "green":
+                    color = Colors.Green;
+                    break;
+                case "yellow":
+                    color = Colors.Yellow;
+                    break;
+                case "purple":
+                    color = Colors.Purple;
+                    break;
+            }
+
+            DrawingAttributes.Color = color;
+            CurrentColorBrush = new SolidColorBrush(color);
+            IsEraserMode = false;
+        }
+
+        private void SwitchToBrush()
+        {
+            IsEraserMode = false;
+        }
+
+        private void SwitchToEraser()
+        {
+            IsEraserMode = true;
+        }
+
+        private void UpdateDrawingAttributes()
+        {
+            if (DrawingAttributes != null)
+            {
+                DrawingAttributes.Width = BrushSize;
+                DrawingAttributes.Height = BrushSize;
+            }
         }
 
         private void AddImage()
@@ -60,20 +154,21 @@ namespace GraphicEditor.ViewModels
 
             if (openFileDialog.ShowDialog() == true)
             {
-                try
-                {
-                    var image = new CanvasImage(openFileDialog.FileName);
-                    CurrentImage = image;
-                    ResizeCanvasToImage(image);
+                CurrentImage = new CanvasImage(openFileDialog.FileName);
+                CanvasWidth = CurrentImage.Width + 40;
+                CanvasHeight = CurrentImage.Height + 40;
 
-                    ClearImageCommand.NotifyCanExecuteChanged();
-                    OnPropertyChanged(nameof(HasImage));
-                }
-                catch (System.Exception ex)
-                {
-                    MessageBox.Show($"Ошибка при загрузке изображения: {ex.Message}",
-                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                RotateImageCommand.NotifyCanExecuteChanged();
+                ClearImageCommand.NotifyCanExecuteChanged();
+                OnPropertyChanged(nameof(HasImage));
+            }
+        }
+
+        private void RotateImage()
+        {
+            if (CurrentImage != null)
+            {
+                CurrentImage.Angle = (CurrentImage.Angle + 90) % 360;
             }
         }
 
@@ -83,21 +178,9 @@ namespace GraphicEditor.ViewModels
             CanvasWidth = 1920;
             CanvasHeight = 1080;
 
+            RotateImageCommand.NotifyCanExecuteChanged();
             ClearImageCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(HasImage));
-        }
-
-        private void RotateImage()
-        {
-            CurrentImage.Angle = (CurrentImage.Angle + 90) % 360;
-        }
-
-        private void ResizeCanvasToImage(CanvasImage image)
-        {
-            int padding = 40;
-
-            CanvasWidth = image.Width + padding;
-            CanvasHeight = image.Height + padding;
         }
     }
 }
