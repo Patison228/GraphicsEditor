@@ -155,8 +155,8 @@ namespace GraphicsEditor.ViewModels
             if (openFileDialog.ShowDialog() == true)
             {
                 CurrentImage = new CanvasImage(openFileDialog.FileName);
-                CanvasWidth = CurrentImage.Width + 40;
-                CanvasHeight = CurrentImage.Height + 40;
+                CanvasWidth = CurrentImage.Width;
+                CanvasHeight = CurrentImage.Height;
 
                 RotateImageCommand.NotifyCanExecuteChanged();
                 ClearImageCommand.NotifyCanExecuteChanged();
