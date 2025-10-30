@@ -2,19 +2,26 @@
 using CommunityToolkit.Mvvm.Input;
 using GraphicsEditor.Models;
 using Microsoft.Win32;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Ink;
 using System.Windows.Media;
 
 namespace GraphicsEditor.ViewModels
 {
-    public class MainViewModel : ObservableObject
+    public partial class MainViewModel : ObservableObject
     {
+        // переменные
         private CanvasImage _currentImage;
         public CanvasImage CurrentImage
         {
             get => _currentImage;
-            set => SetProperty(ref _currentImage, value);
+            set
+            {
+                SetProperty(ref _currentImage, value);
+                UpdateCommands();
+                OnPropertyChanged(nameof(HasImage));
+            }
         }
 
         private DrawingAttributes _drawingAttributes;
@@ -63,18 +70,40 @@ namespace GraphicsEditor.ViewModels
             set => SetProperty(ref _canvasHeight, value);
         }
 
+        private ObservableCollection<ImageFilter> _availableFilters;
+        public ObservableCollection<ImageFilter> AvailableFilters
+        {
+            get => _availableFilters;
+            set => SetProperty(ref _availableFilters, value);
+        }
+
+        private ImageFilter _selectedFilter;
+        public ImageFilter SelectedFilter
+        {
+            get => _selectedFilter;
+            set
+            {
+                SetProperty(ref _selectedFilter, value);
+                ApplyFilterCommand.NotifyCanExecuteChanged();
+            }
+        }
+
         public bool HasImage => CurrentImage != null;
 
+        //команды
         public RelayCommand AddImageCommand { get; }
         public RelayCommand RotateImageCommand { get; }
         public RelayCommand ClearImageCommand { get; }
         public RelayCommand<string> SelectColorCommand { get; }
         public RelayCommand BrushCommand { get; }
         public RelayCommand EraserCommand { get; }
+        public RelayCommand ApplyFilterCommand { get; }
+        public RelayCommand ResetFilterCommand { get; }
 
         public MainViewModel()
         {
             InitializeDrawingTools();
+            InitializeFilters();
 
             AddImageCommand = new RelayCommand(AddImage);
             RotateImageCommand = new RelayCommand(RotateImage, () => HasImage);
@@ -82,6 +111,8 @@ namespace GraphicsEditor.ViewModels
             SelectColorCommand = new RelayCommand<string>(SelectColor);
             BrushCommand = new RelayCommand(SwitchToBrush);
             EraserCommand = new RelayCommand(SwitchToEraser);
+            ApplyFilterCommand = new RelayCommand(ApplyFilter, () => HasImage && SelectedFilter != null);
+            ResetFilterCommand = new RelayCommand(ResetFilter, () => HasImage && CurrentImage?.IsFiltered == true);
         }
 
         private void InitializeDrawingTools()
@@ -95,6 +126,17 @@ namespace GraphicsEditor.ViewModels
             };
 
             CurrentColorBrush = new SolidColorBrush(Colors.Blue);
+        }
+
+        private void InitializeFilters()
+        {
+            AvailableFilters = new ObservableCollection<ImageFilter>
+            {
+                new BlackWhiteFilter(),
+                new WarmFilter(),
+                new OrangeFilter(),
+                new BlurFilter()
+            };
         }
 
         private void SelectColor(string colorName)
@@ -157,10 +199,6 @@ namespace GraphicsEditor.ViewModels
                 CurrentImage = new CanvasImage(openFileDialog.FileName);
                 CanvasWidth = CurrentImage.Width;
                 CanvasHeight = CurrentImage.Height;
-
-                RotateImageCommand.NotifyCanExecuteChanged();
-                ClearImageCommand.NotifyCanExecuteChanged();
-                OnPropertyChanged(nameof(HasImage));
             }
         }
 
@@ -175,12 +213,35 @@ namespace GraphicsEditor.ViewModels
         private void ClearImage()
         {
             CurrentImage = null;
+            SelectedFilter = null;
             CanvasWidth = 1920;
             CanvasHeight = 1080;
+        }
 
+        private void ApplyFilter()
+        {
+            if (CurrentImage != null && SelectedFilter != null)
+            {
+                CurrentImage.ApplyFilter(SelectedFilter);
+                ResetFilterCommand.NotifyCanExecuteChanged();
+            }
+        }
+
+        private void ResetFilter()
+        {
+            if (CurrentImage != null)
+            {
+                CurrentImage.ResetFilter();
+                ResetFilterCommand.NotifyCanExecuteChanged();
+            }
+        }
+
+        private void UpdateCommands()
+        {
             RotateImageCommand.NotifyCanExecuteChanged();
             ClearImageCommand.NotifyCanExecuteChanged();
-            OnPropertyChanged(nameof(HasImage));
+            ApplyFilterCommand.NotifyCanExecuteChanged();
+            ResetFilterCommand.NotifyCanExecuteChanged();
         }
     }
 }
