@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GraphicsEditor"
         xmlns:vm="clr-namespace:GraphicsEditor.ViewModels"
+        xmlns:converters="clr-namespace:GraphicsEditor.Converters"
         mc:Ignorable="d"
         Title="Graphics Editor" Height="600" Width="800">
 
@@ -15,84 +16,157 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <ToolBar Grid.Row="0">
             <Button Command="{Binding AddImageCommand}" ToolTip="Добавить изображение">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Добавить" Margin="5,0,0,0"/>
-                </StackPanel>
+                <TextBlock Text="Добавить"/>
             </Button>
 
             <Button Command="{Binding RotateImageCommand}" ToolTip="Повернуть изображение">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Повернуть" Margin="5,0,0,0"/>
-                </StackPanel>
+                <TextBlock Text="Повернуть"/>
+            </Button>
+
+            <Button Command="{Binding ClearImageCommand}" ToolTip="Очистить изображение">
+                <TextBlock Text="Очистить"/>
             </Button>
 
             <Separator/>
 
             <Button Command="{Binding BrushCommand}" ToolTip="Кисть">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="🖌️" FontSize="14"/>
-                    <TextBlock Text="Кисть" Margin="5,0,0,0"/>
-                </StackPanel>
+                <TextBlock Text="Кисть"/>
             </Button>
 
             <Button Command="{Binding EraserCommand}" ToolTip="Ластик">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="🧹" FontSize="14"/>
-                    <TextBlock Text="Ластик" Margin="5,0,0,0"/>
-                </StackPanel>
+                <TextBlock Text="Ластик"/>
             </Button>
 
             <Separator/>
 
             <Button Command="{Binding SelectColorCommand}" CommandParameter="Red" ToolTip="Красный">
-                <Rectangle Fill="Red" Width="20" Height="20"/>
+                <Rectangle Fill="Red" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
             </Button>
 
             <Button Command="{Binding SelectColorCommand}" CommandParameter="Blue" ToolTip="Синий">
-                <Rectangle Fill="Blue" Width="20" Height="20"/>
+                <Rectangle Fill="Blue" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
             </Button>
 
             <Button Command="{Binding SelectColorCommand}" CommandParameter="Green" ToolTip="Зеленый">
-                <Rectangle Fill="Green" Width="20" Height="20"/>
+                <Rectangle Fill="Green" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
             </Button>
 
             <Button Command="{Binding SelectColorCommand}" CommandParameter="Yellow" ToolTip="Желтый">
-                <Rectangle Fill="Yellow" Width="20" Height="20"/>
+                <Rectangle Fill="Yellow" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
             </Button>
 
             <Button Command="{Binding SelectColorCommand}" CommandParameter="Purple" ToolTip="Фиолетовый">
-                <Rectangle Fill="Purple" Width="20" Height="20"/>
+                <Rectangle Fill="Purple" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
             </Button>
 
             <Separator/>
 
-            <TextBlock Text="Размер:" VerticalAlignment="Center"/>
+            <TextBlock Text="Размер:" VerticalAlignment="Center" Margin="5,0,0,0"/>
             <Slider Value="{Binding BrushSize}" 
                     Minimum="1" 
                     Maximum="20" 
-                    Width="100"/>
-            <TextBlock Text="{Binding BrushSize, StringFormat={}{0:F0}}"/>
+                    Width="100"
+                    Margin="5,0,5,0"/>
+            
+            <TextBlock Text="{Binding BrushSize, StringFormat={}{0:F0}}" 
+                       VerticalAlignment="Center"
+                       Width="20"/>
         </ToolBar>
 
-        <ScrollViewer Grid.Row="1" 
+        <Border Grid.Row="1" Background="#f0f0f0" Padding="5" BorderBrush="#cccccc" BorderThickness="0,1,0,1">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Фильтры:" 
+                           VerticalAlignment="Center" 
+                           FontWeight="Bold" 
+                           Margin="5,0,10,0"/>
+
+                <ComboBox ItemsSource="{Binding AvailableFilters}"
+                          SelectedItem="{Binding SelectedFilter}"
+                          Width="120"
+                          Margin="5,0"
+                          ToolTip="Выберите фильтр для изображения">
+                    
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="2">
+                                <TextBlock Text="{Binding Name}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Button Command="{Binding ApplyFilterCommand}" 
+                        Content="Применить фильтр" 
+                        Margin="5,0"
+                        Padding="10,5"
+                        ToolTip="Применить выбранный фильтр к изображению">
+                    
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                
+                                <DataTrigger Binding="{Binding HasImage}" Value="False">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                                
+                                <DataTrigger Binding="{Binding SelectedFilter}" Value="{x:Null}">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                                
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Command="{Binding ResetFilterCommand}" 
+                        Content="Сбросить фильтры" 
+                        Margin="5,0"
+                        Padding="10,5"
+                        Background="#ffe6e6"
+                        ToolTip="Вернуть оригинальное изображение">
+                    
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasImage}" Value="False">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <TextBlock Text="{Binding SelectedFilter.Description}" 
+                           VerticalAlignment="Center" 
+                           Margin="10,0,0,0"
+                           FontStyle="Italic"
+                           Foreground="#666666"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="2" 
                       HorizontalScrollBarVisibility="Auto" 
-                      VerticalScrollBarVisibility="Auto">
+                      VerticalScrollBarVisibility="Auto"
+                      Background="White">
 
             <InkCanvas x:Name="MainInkCanvas"
                        Background="White" 
                        Width="{Binding CanvasWidth}" 
-                       Height="{Binding CanvasHeight}">
+                       Height="{Binding CanvasHeight}"
+                       DefaultDrawingAttributes="{Binding DrawingAttributes}"
+                       EditingMode="{Binding IsEraserMode, Converter={x:Static converters:BoolToInkCanvasEditingModeConverter.Instance}}">
 
                 <Image Source="{Binding CurrentImage.ImageSource}" 
                        Width="{Binding CurrentImage.Width}" 
                        Height="{Binding CurrentImage.Height}"
                        RenderTransformOrigin="0.5,0.5">
-                    
+
                     <Image.RenderTransform>
                         <RotateTransform Angle="{Binding CurrentImage.Angle}"/>
                     </Image.RenderTransform>
