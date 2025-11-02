@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Ink;
+using GraphicsEditor.ViewModels;
 
 namespace GraphicsEditor
 {
@@ -10,28 +11,51 @@ namespace GraphicsEditor
         {
             InitializeComponent();
 
-            Loaded += (s, e) =>
+            this.DataContext = new MainViewModel();
+
+            Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as MainViewModel;
+
+            if (vm != null)
             {
-                var vm = DataContext as ViewModels.MainViewModel;
+                vm.CurrentInkCanvas = MainInkCanvas;
 
-                if (vm != null)
+                MainInkCanvas.DefaultDrawingAttributes = vm.DrawingAttributes;
+                MainInkCanvas.EditingMode = vm.IsEraserMode ?
+                    InkCanvasEditingMode.EraseByPoint : InkCanvasEditingMode.Ink;
+
+                vm.PropertyChanged += (s, args) =>
                 {
-                    MainInkCanvas.DefaultDrawingAttributes = vm.DrawingAttributes;
-
-                    vm.PropertyChanged += (sender, args) =>
+                    switch (args.PropertyName)
                     {
-                        if (args.PropertyName == nameof(vm.DrawingAttributes))
-                        {
+                        case nameof(vm.DrawingAttributes):
                             MainInkCanvas.DefaultDrawingAttributes = vm.DrawingAttributes;
-                        }
-                        else if (args.PropertyName == nameof(vm.IsEraserMode))
-                        {
+                            break;
+
+                        case nameof(vm.IsEraserMode):
                             MainInkCanvas.EditingMode = vm.IsEraserMode ?
                                 InkCanvasEditingMode.EraseByPoint : InkCanvasEditingMode.Ink;
-                        }
-                    };
-                }
-            };
+                            break;
+
+                        case nameof(vm.CurrentImage):
+                            if (vm.CurrentImage == null)
+                            {
+                                MainInkCanvas.Strokes?.Clear();
+                            }
+                            break;
+                    }
+                };
+            }
+        }
+
+        // Обработчик очистки канваса (опционально)
+        private void ClearStrokes()
+        {
+            MainInkCanvas.Strokes.Clear();
         }
     }
 }

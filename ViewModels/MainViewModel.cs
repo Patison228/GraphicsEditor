@@ -6,6 +6,9 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Ink;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.IO;
+using System.Windows.Controls;
 
 namespace GraphicsEditor.ViewModels
 {
@@ -88,6 +91,14 @@ namespace GraphicsEditor.ViewModels
             }
         }
 
+        // Свойство для ссылки на InkCanvas из View
+        private InkCanvas _currentInkCanvas;
+        public InkCanvas CurrentInkCanvas
+        {
+            get => _currentInkCanvas;
+            set => SetProperty(ref _currentInkCanvas, value);
+        }
+
         public bool HasImage => CurrentImage != null;
 
         //команды
@@ -99,6 +110,7 @@ namespace GraphicsEditor.ViewModels
         public RelayCommand EraserCommand { get; }
         public RelayCommand ApplyFilterCommand { get; }
         public RelayCommand ResetFilterCommand { get; }
+        public RelayCommand SaveAsJpgCommand { get; }
 
         public MainViewModel()
         {
@@ -113,6 +125,7 @@ namespace GraphicsEditor.ViewModels
             EraserCommand = new RelayCommand(SwitchToEraser);
             ApplyFilterCommand = new RelayCommand(ApplyFilter, () => HasImage && SelectedFilter != null);
             ResetFilterCommand = new RelayCommand(ResetFilter, () => HasImage && CurrentImage?.IsFiltered == true);
+            SaveAsJpgCommand = new RelayCommand(SaveAsJpg, () => HasImage);
         }
 
         private void InitializeDrawingTools()
@@ -207,6 +220,11 @@ namespace GraphicsEditor.ViewModels
             if (CurrentImage != null)
             {
                 CurrentImage.Angle = (CurrentImage.Angle + 90) % 360;
+
+                OnPropertyChanged(nameof(CanvasWidth));
+                OnPropertyChanged(nameof(CanvasHeight));
+
+                OnPropertyChanged(nameof(CurrentImage));
             }
         }
 
@@ -242,6 +260,55 @@ namespace GraphicsEditor.ViewModels
             ClearImageCommand.NotifyCanExecuteChanged();
             ApplyFilterCommand.NotifyCanExecuteChanged();
             ResetFilterCommand.NotifyCanExecuteChanged();
+            SaveAsJpgCommand.NotifyCanExecuteChanged();
+        }
+
+        private void SaveAsJpg()
+        {
+            if (CurrentInkCanvas == null)
+            {
+                MessageBox.Show("InkCanvas не доступен для сохранения.", "Ошибка",
+                              MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var saveDialog = new SaveFileDialog
+            {
+                Filter = "JPEG Image|*.jpg;*.jpeg",
+                DefaultExt = ".jpg",
+                Title = "Сохранить как JPG"
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                SaveInkCanvasToJpeg(CurrentInkCanvas, saveDialog.FileName, 90);
+                MessageBox.Show("Изображение успешно сохранено в JPG!", "Сохранение",
+                              MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void SaveInkCanvasToJpeg(InkCanvas inkCanvas, string filePath, int quality)
+        {
+            Rect bounds = VisualTreeHelper.GetDescendantBounds(inkCanvas);
+
+            if (bounds.IsEmpty)
+                bounds = new Rect(0, 0, inkCanvas.ActualWidth, inkCanvas.ActualHeight);
+
+            RenderTargetBitmap rtb = new RenderTargetBitmap(
+                (int)bounds.Width,
+                (int)bounds.Height,
+                96, 96, PixelFormats.Pbgra32);
+
+            rtb.Render(inkCanvas);
+
+            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+            encoder.QualityLevel = quality; 
+            encoder.Frames.Add(BitmapFrame.Create(rtb));
+
+            using (FileStream fs = new FileStream(filePath, FileMode.Create))
+            {
+                encoder.Save(fs);
+            }
         }
     }
 }

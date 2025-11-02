@@ -25,6 +25,10 @@
                 <TextBlock Text="Добавить"/>
             </Button>
 
+            <Button Command="{Binding SaveAsJpgCommand}" ToolTip="Сохранить изображение">
+                <TextBlock Text="Сохранить"/>
+            </Button>
+
             <Button Command="{Binding RotateImageCommand}" ToolTip="Повернуть изображение">
                 <TextBlock Text="Повернуть"/>
             </Button>
@@ -130,7 +134,7 @@
                         Padding="10,5"
                         Background="#ffe6e6"
                         ToolTip="Вернуть оригинальное изображение">
-                    
+
                     <Button.Style>
                         <Style TargetType="Button">
                             <Style.Triggers>
@@ -141,12 +145,6 @@
                         </Style>
                     </Button.Style>
                 </Button>
-
-                <TextBlock Text="{Binding SelectedFilter.Description}" 
-                           VerticalAlignment="Center" 
-                           Margin="10,0,0,0"
-                           FontStyle="Italic"
-                           Foreground="#666666"/>
             </StackPanel>
         </Border>
 
@@ -156,16 +154,14 @@
                       Background="White">
 
             <InkCanvas x:Name="MainInkCanvas"
-                       Background="White" 
-                       Width="{Binding CanvasWidth}" 
-                       Height="{Binding CanvasHeight}"
+                       Background="White"
                        DefaultDrawingAttributes="{Binding DrawingAttributes}"
                        EditingMode="{Binding IsEraserMode, Converter={x:Static converters:BoolToInkCanvasEditingModeConverter.Instance}}">
 
                 <Image Source="{Binding CurrentImage.ImageSource}" 
-                       Width="{Binding CurrentImage.Width}" 
-                       Height="{Binding CurrentImage.Height}"
-                       RenderTransformOrigin="0.5,0.5">
+                       RenderTransformOrigin="0.5,0.5"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center">
 
                     <Image.RenderTransform>
                         <RotateTransform Angle="{Binding CurrentImage.Angle}"/>
