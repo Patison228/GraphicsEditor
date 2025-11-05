@@ -9,6 +9,12 @@
         mc:Ignorable="d"
         Title="Graphics Editor" Height="600" Width="800">
 
+    <Window.InputBindings>
+        <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoStrokeCommand}"/>
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveAsJpgCommand}"/>
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding AddImageCommand}"/>
+    </Window.InputBindings>
+
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
@@ -21,11 +27,11 @@
         </Grid.RowDefinitions>
 
         <ToolBar Grid.Row="0">
-            <Button Command="{Binding AddImageCommand}" ToolTip="Добавить изображение">
+            <Button Command="{Binding AddImageCommand}" ToolTip="Добавить изображение (Ctrl+O)">
                 <TextBlock Text="Добавить"/>
             </Button>
 
-            <Button Command="{Binding SaveAsJpgCommand}" ToolTip="Сохранить изображение">
+            <Button Command="{Binding SaveAsJpgCommand}" ToolTip="Сохранить изображение (Ctrl+S)">
                 <TextBlock Text="Сохранить"/>
             </Button>
 
@@ -45,6 +51,12 @@
 
             <Button Command="{Binding EraserCommand}" ToolTip="Ластик">
                 <TextBlock Text="Ластик"/>
+            </Button>
+
+            <Separator/>
+
+            <Button Command="{Binding UndoStrokeCommand}" ToolTip="Отменить последний штрих (Ctrl+Z)">
+                <TextBlock Text="Отменить"/>
             </Button>
 
             <Separator/>
@@ -77,7 +89,7 @@
                     Maximum="20" 
                     Width="100"
                     Margin="5,0,5,0"/>
-            
+
             <TextBlock Text="{Binding BrushSize, StringFormat={}{0:F0}}" 
                        VerticalAlignment="Center"
                        Width="20"/>
@@ -95,7 +107,7 @@
                           Width="120"
                           Margin="5,0"
                           ToolTip="Выберите фильтр для изображения">
-                    
+
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Margin="2">
@@ -110,19 +122,19 @@
                         Margin="5,0"
                         Padding="10,5"
                         ToolTip="Применить выбранный фильтр к изображению">
-                    
+
                     <Button.Style>
                         <Style TargetType="Button">
                             <Style.Triggers>
-                                
+
                                 <DataTrigger Binding="{Binding HasImage}" Value="False">
                                     <Setter Property="IsEnabled" Value="False"/>
                                 </DataTrigger>
-                                
+
                                 <DataTrigger Binding="{Binding SelectedFilter}" Value="{x:Null}">
                                     <Setter Property="IsEnabled" Value="False"/>
                                 </DataTrigger>
-                                
+
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
@@ -156,7 +168,8 @@
             <InkCanvas x:Name="MainInkCanvas"
                        Background="White"
                        DefaultDrawingAttributes="{Binding DrawingAttributes}"
-                       EditingMode="{Binding IsEraserMode, Converter={x:Static converters:BoolToInkCanvasEditingModeConverter.Instance}}">
+                       EditingMode="{Binding IsEraserMode, Converter={x:Static converters:BoolToInkCanvasEditingModeConverter.Instance}}"
+                       StrokeCollected="InkCanvas_StrokeCollected">
 
                 <Image Source="{Binding CurrentImage.ImageSource}" 
                        RenderTransformOrigin="0.5,0.5"

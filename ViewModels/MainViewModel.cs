@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.IO;
 using System.Windows.Controls;
+using System.Collections.Generic;
 
 namespace GraphicsEditor.ViewModels
 {
@@ -91,12 +92,21 @@ namespace GraphicsEditor.ViewModels
             }
         }
 
-        // Свойство для ссылки на InkCanvas из View
         private InkCanvas _currentInkCanvas;
         public InkCanvas CurrentInkCanvas
         {
             get => _currentInkCanvas;
             set => SetProperty(ref _currentInkCanvas, value);
+        }
+
+        private Stack<Stroke> _undoStack = new Stack<Stroke>();
+        private const int MAX_UNDO_STEPS = 50;
+
+        private bool _canUndo = false;
+        public bool CanUndo
+        {
+            get => _canUndo;
+            set => SetProperty(ref _canUndo, value);
         }
 
         public bool HasImage => CurrentImage != null;
@@ -111,6 +121,7 @@ namespace GraphicsEditor.ViewModels
         public RelayCommand ApplyFilterCommand { get; }
         public RelayCommand ResetFilterCommand { get; }
         public RelayCommand SaveAsJpgCommand { get; }
+        public RelayCommand UndoStrokeCommand { get; }
 
         public MainViewModel()
         {
@@ -126,6 +137,7 @@ namespace GraphicsEditor.ViewModels
             ApplyFilterCommand = new RelayCommand(ApplyFilter, () => HasImage && SelectedFilter != null);
             ResetFilterCommand = new RelayCommand(ResetFilter, () => HasImage && CurrentImage?.IsFiltered == true);
             SaveAsJpgCommand = new RelayCommand(SaveAsJpg, () => HasImage);
+            UndoStrokeCommand = new RelayCommand(UndoLastStroke, () => CanUndo && CurrentInkCanvas != null);
         }
 
         private void InitializeDrawingTools()
@@ -212,6 +224,7 @@ namespace GraphicsEditor.ViewModels
                 CurrentImage = new CanvasImage(openFileDialog.FileName);
                 CanvasWidth = CurrentImage.Width;
                 CanvasHeight = CurrentImage.Height;
+                ClearStrokeHistory();
             }
         }
 
@@ -223,7 +236,6 @@ namespace GraphicsEditor.ViewModels
 
                 OnPropertyChanged(nameof(CanvasWidth));
                 OnPropertyChanged(nameof(CanvasHeight));
-
                 OnPropertyChanged(nameof(CurrentImage));
             }
         }
@@ -234,6 +246,7 @@ namespace GraphicsEditor.ViewModels
             SelectedFilter = null;
             CanvasWidth = 1920;
             CanvasHeight = 1080;
+            ClearStrokeHistory();
         }
 
         private void ApplyFilter()
@@ -254,6 +267,56 @@ namespace GraphicsEditor.ViewModels
             }
         }
 
+        public void SaveStrokeToUndo(Stroke stroke)
+        {
+            if (stroke != null && CurrentInkCanvas != null)
+            {
+                Stroke strokeCopy = stroke.Clone();
+                _undoStack.Push(strokeCopy);
+
+                if (_undoStack.Count > MAX_UNDO_STEPS)
+                {
+                    var tempStack = new Stack<Stroke>();
+                    var array = _undoStack.ToArray();
+
+                    for (int i = array.Length - 1; i >= array.Length - MAX_UNDO_STEPS; i--)
+                    {
+                        tempStack.Push(array[i]);
+                    }
+                    _undoStack = tempStack;
+                }
+
+                UpdateUndoState();
+            }
+        }
+
+        private void UndoLastStroke()
+        {
+            if (_undoStack.Count > 0 && CurrentInkCanvas != null)
+            {
+                Stroke lastStroke = _undoStack.Pop();
+
+                if (CurrentInkCanvas.Strokes.Count > 0)
+                {
+                    CurrentInkCanvas.Strokes.RemoveAt(CurrentInkCanvas.Strokes.Count - 1);
+                }
+
+                UpdateUndoState();
+            }
+        }
+
+        private void UpdateUndoState()
+        {
+            CanUndo = _undoStack.Count > 0;
+            UndoStrokeCommand.NotifyCanExecuteChanged();
+        }
+
+        public void ClearStrokeHistory()
+        {
+            _undoStack.Clear();
+            UpdateUndoState();
+        }
+
         private void UpdateCommands()
         {
             RotateImageCommand.NotifyCanExecuteChanged();
@@ -261,6 +324,7 @@ namespace GraphicsEditor.ViewModels
             ApplyFilterCommand.NotifyCanExecuteChanged();
             ResetFilterCommand.NotifyCanExecuteChanged();
             SaveAsJpgCommand.NotifyCanExecuteChanged();
+            UndoStrokeCommand.NotifyCanExecuteChanged();
         }
 
         private void SaveAsJpg()
@@ -302,7 +366,7 @@ namespace GraphicsEditor.ViewModels
             rtb.Render(inkCanvas);
 
             JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-            encoder.QualityLevel = quality; 
+            encoder.QualityLevel = quality;
             encoder.Frames.Add(BitmapFrame.Create(rtb));
 
             using (FileStream fs = new FileStream(filePath, FileMode.Create))

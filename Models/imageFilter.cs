@@ -47,6 +47,7 @@ namespace GraphicsEditor.Models
                 source.PixelWidth, source.PixelHeight,
                 source.DpiX, source.DpiY,
                 PixelFormats.Pbgra32);
+
             target.Render(visual);
 
             return target;

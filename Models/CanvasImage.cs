@@ -74,18 +74,11 @@ namespace GraphicsEditor.Models
             if (_originalImage == null || filter == null)
                 return;
 
-            try
-            {
-                var filteredImage = filter.ApplyFilter(_originalImage);
-                ImageSource = filteredImage;
-                _isFiltered = true;
-                OnPropertyChanged(nameof(IsFiltered));
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Ошибка применения фильтра: {ex.Message}", "Ошибка",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-            }
+            var filteredImage = filter.ApplyFilter(_originalImage);
+            ImageSource = filteredImage;
+            _isFiltered = true;
+
+            OnPropertyChanged(nameof(IsFiltered));
         }
 
         public void ResetFilter()
@@ -94,6 +87,7 @@ namespace GraphicsEditor.Models
             {
                 ImageSource = _originalImage;
                 _isFiltered = false;
+
                 OnPropertyChanged(nameof(IsFiltered));
             }
         }
