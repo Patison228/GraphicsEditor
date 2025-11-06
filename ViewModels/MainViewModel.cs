@@ -144,13 +144,13 @@ namespace GraphicsEditor.ViewModels
         {
             DrawingAttributes = new DrawingAttributes
             {
-                Color = Colors.Blue,
+                Color = Colors.Black,
                 Width = BrushSize,
                 Height = BrushSize,
                 FitToCurve = true
             };
 
-            CurrentColorBrush = new SolidColorBrush(Colors.Blue);
+            CurrentColorBrush = new SolidColorBrush(Colors.Black);
         }
 
         private void InitializeFilters()
@@ -159,14 +159,14 @@ namespace GraphicsEditor.ViewModels
             {
                 new BlackWhiteFilter(),
                 new WarmFilter(),
-                new OrangeFilter(),
+                new NegativeFilter(),
                 new BlurFilter()
             };
         }
 
         private void SelectColor(string colorName)
         {
-            Color color = Colors.Blue;
+            Color color = Colors.Black;
 
             switch (colorName?.ToLower())
             {
@@ -182,7 +182,7 @@ namespace GraphicsEditor.ViewModels
                 case "yellow":
                     color = Colors.Yellow;
                     break;
-                case "purple":
+                case "black":
                     color = Colors.Purple;
                     break;
             }

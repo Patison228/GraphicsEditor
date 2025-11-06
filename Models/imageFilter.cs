@@ -120,7 +120,6 @@ namespace GraphicsEditor.Models
                 byte g = (byte)(pixel >> 8);
                 byte b = (byte)(pixel);
 
-                // Увеличиваем красный и зеленый каналы для теплого эффекта
                 int newR = Math.Min(255, (int)(r + (255 - r) * Warmth * 0.5));
                 int newG = Math.Min(255, (int)(g + (255 - g) * Warmth * 0.3));
                 int newB = Math.Max(0, (int)(b - b * Warmth * 0.2));
@@ -134,64 +133,35 @@ namespace GraphicsEditor.Models
         }
     }
 
-    public class OrangeFilter : ImageFilter
+    public class NegativeFilter : ImageFilter
     {
-        public double Intensity { get; set; } = 0.3;
-
-        public OrangeFilter()
+        public NegativeFilter()
         {
-            Name = "Ржавый";
-            Description = "Apply orange tint effect";
+            Name = "Негатив";
+            Description = "Convert in negative";
         }
 
         public override BitmapSource ApplyFilter(BitmapSource source)
         {
-            FormatConvertedBitmap formattedBitmap = new FormatConvertedBitmap();
-            formattedBitmap.BeginInit();
-            formattedBitmap.Source = source;
-            formattedBitmap.DestinationFormat = PixelFormats.Pbgra32;
-            formattedBitmap.EndInit();
+            var format = source.Format;
+            if (format != PixelFormats.Bgra32)
+                source = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
 
-            WriteableBitmap bitmap = new WriteableBitmap(formattedBitmap);
-            int width = bitmap.PixelWidth;
-            int height = bitmap.PixelHeight;
-            int stride = width * 4;
-            int arraySize = height * stride;
-
-            byte[] pixels = new byte[arraySize];
-            bitmap.CopyPixels(pixels, stride, 0);
+            int stride = source.PixelWidth * 4;
+            byte[] pixels = new byte[source.PixelHeight * stride];
+            source.CopyPixels(pixels, stride, 0);
 
             for (int i = 0; i < pixels.Length; i += 4)
             {
-                byte blue = pixels[i];
-                byte green = pixels[i + 1];
-                byte red = pixels[i + 2];
-                byte alpha = pixels[i + 3];
-
-                double brightness = (red * 0.299 + green * 0.587 + blue * 0.114) / 255.0;
-
-                int targetRed = 255;
-                int targetGreen = 165;
-                int targetBlue = 0;
-
-                double blendFactor = Intensity;
-
-                int newRed = (int)(red * (1 - blendFactor) + targetRed * blendFactor * brightness);
-                int newGreen = (int)(green * (1 - blendFactor) + targetGreen * blendFactor * brightness);
-                int newBlue = (int)(blue * (1 - blendFactor) + targetBlue * blendFactor * brightness);
-
-                pixels[i] = ClampToByte(newBlue);
-                pixels[i + 1] = ClampToByte(newGreen);
-                pixels[i + 2] = ClampToByte(newRed);
+                pixels[i] = (byte)(255 - pixels[i]);   
+                pixels[i + 1] = (byte)(255 - pixels[i + 1]);
+                pixels[i + 2] = (byte)(255 - pixels[i + 2]); 
             }
 
-            bitmap.WritePixels(new Int32Rect(0, 0, width, height), pixels, stride, 0);
-            return bitmap;
-        }
-
-        private byte ClampToByte(int value)
-        {
-            return (byte)Math.Max(0, Math.Min(255, value));
+            return BitmapSource.Create(
+                source.PixelWidth, source.PixelHeight,
+                source.DpiX, source.DpiY,
+                PixelFormats.Bgra32, null, pixels, stride);
         }
     }
 }

@@ -61,6 +61,10 @@
 
             <Separator/>
 
+            <Button Command="{Binding SelectColorCommand}" CommandParameter="Black" ToolTip="Черный">
+                <Rectangle Fill="Black" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
+            </Button>
+
             <Button Command="{Binding SelectColorCommand}" CommandParameter="Red" ToolTip="Красный">
                 <Rectangle Fill="Red" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
             </Button>
@@ -75,10 +79,6 @@
 
             <Button Command="{Binding SelectColorCommand}" CommandParameter="Yellow" ToolTip="Желтый">
                 <Rectangle Fill="Yellow" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
-            </Button>
-
-            <Button Command="{Binding SelectColorCommand}" CommandParameter="Purple" ToolTip="Фиолетовый">
-                <Rectangle Fill="Purple" Width="20" Height="20" Stroke="DarkGray" StrokeThickness="1"/>
             </Button>
 
             <Separator/>
