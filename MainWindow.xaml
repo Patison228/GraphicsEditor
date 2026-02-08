@@ -1,141 +1,175 @@
-﻿<Window x:Class="GraphicsEditor.MainWindow"
+﻿<Window x:Class="PhotoEditor.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Графический редактор" Height="700" Width="1200"
-        KeyDown="Window_KeyDown">
+        Title="Photo Editor" Height="700" Width="1200"
+        Background="#2d2d2d" KeyDown="Window_KeyDown">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Панель инструментов -->
+        <Border Grid.Column="0" Background="#1e1e1e" BorderBrush="#3f3f3f" 
+                BorderThickness="0,0,1,0" Padding="10">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+
+                    <!-- Файл -->
+                    <TextBlock Text="📁 ФАЙЛ" FontWeight="Bold" FontSize="14" 
+                               Foreground="#007acc" Margin="0,0,0,10"/>
+                    <Button Content="Открыть (Ctrl+O)" Click="OpenImage_Click" 
+                            Style="{StaticResource ToolButton}"/>
+                    <Button Content="Сохранить (Ctrl+S)" Click="SaveImage_Click" 
+                            Style="{StaticResource ToolButton}"/>
+                    <Button Content="Новый холст" Click="NewCanvas_Click" 
+                            Style="{StaticResource ToolButton}"/>
+
+                    <Separator Margin="0,15,0,15" Background="#3f3f3f"/>
+
+                    <!-- История -->
+                    <TextBlock Text="⏮️ ИСТОРИЯ" FontWeight="Bold" FontSize="14"
+                               Foreground="#007acc" Margin="0,0,0,10"/>
+                    <Button Content="Отмена (Ctrl+Z)" Click="Undo_Click" 
+                            Style="{StaticResource ToolButton}"/>
+                    <Button Content="Повтор (Ctrl+Y)" Click="Redo_Click" 
+                            Style="{StaticResource ToolButton}"/>
+
+                    <Separator Margin="0,15,0,15" Background="#3f3f3f"/>
+
+                    <!-- Фильтры -->
+                    <TextBlock Text="🎨 ФИЛЬТРЫ" FontWeight="Bold" FontSize="14"
+                               Foreground="#007acc" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="Яркость:" Foreground="White" Margin="0,5,0,3"/>
+                    <Slider x:Name="BrightnessSlider" Minimum="-100" Maximum="100" 
+                            Value="0" TickFrequency="10" IsSnapToTickEnabled="True"
+                            ValueChanged="BrightnessSlider_ValueChanged"/>
+                    <TextBlock Text="{Binding Value, ElementName=BrightnessSlider}" 
+                               Foreground="#4ec9b0" HorizontalAlignment="Center"/>
+
+                    <Button Content="Размытие" Click="Blur_Click" 
+                            Style="{StaticResource ToolButton}" Margin="0,10,0,0"/>
+                    <Button Content="Черно-белый" Click="Grayscale_Click" 
+                            Style="{StaticResource ToolButton}"/>
+                    <Button Content="Негатив" Click="Invert_Click" 
+                            Style="{StaticResource ToolButton}"/>
+                    <Button Content="Сепия" Click="Sepia_Click" 
+                            Style="{StaticResource ToolButton}"/>
+                    <Button Content="Резкость" Click="Sharpen_Click" 
+                            Style="{StaticResource ToolButton}"/>
+
+                    <Separator Margin="0,15,0,15" Background="#3f3f3f"/>
+
+                    <!-- Поворот -->
+                    <TextBlock Text="🔄 ПОВОРОТ" FontWeight="Bold" FontSize="14"
+                               Foreground="#007acc" Margin="0,0,0,10"/>
+                    <Button Content="⤺ Влево 90°" Click="RotateLeft_Click" 
+                            Style="{StaticResource ToolButton}"/>
+                    <Button Content="⤻ Вправо 90°" Click="RotateRight_Click" 
+                            Style="{StaticResource ToolButton}"/>
+
+                    <Separator Margin="0,15,0,15" Background="#3f3f3f"/>
+
+                    <!-- Выделение и Кроп -->
+                    <TextBlock Text="🔲 ВЫДЕЛЕНИЕ" FontWeight="Bold" FontSize="14"
+                               Foreground="#007acc" Margin="0,0,0,10"/>
+                    <CheckBox x:Name="SelectionModeCheck" Content="Режим выделения" 
+                              Foreground="White" Margin="0,0,0,10"
+                              Checked="SelectionMode_Changed" 
+                              Unchecked="SelectionMode_Changed"/>
+                    <Button Content="Обрезать выделенное" Click="Crop_Click" 
+                            Style="{StaticResource ToolButton}"/>
+                    <Button Content="Очистить выделение" Click="ClearSelection_Click" 
+                            Style="{StaticResource ToolButton}"/>
+
+                    <Separator Margin="0,15,0,15" Background="#3f3f3f"/>
+
+                    <!-- Рисование -->
+                    <TextBlock Text="✏️ РИСОВАНИЕ" FontWeight="Bold" FontSize="14"
+                               Foreground="#007acc" Margin="0,0,0,10"/>
+                    <CheckBox x:Name="DrawModeCheck" Content="Режим рисования" 
+                              Foreground="White" Margin="0,0,0,10"
+                              Checked="DrawMode_Changed" 
+                              Unchecked="DrawMode_Changed"/>
+
+                    <TextBlock Text="Размер кисти:" Foreground="White" Margin="0,5,0,3"/>
+                    <Slider x:Name="BrushSizeSlider" Minimum="1" Maximum="50" 
+                            Value="10" TickFrequency="5" IsSnapToTickEnabled="True"/>
+                    <TextBlock Text="{Binding Value, ElementName=BrushSizeSlider}" 
+                               Foreground="#4ec9b0" HorizontalAlignment="Center"/>
+
+                    <TextBlock Text="Цвет кисти:" Foreground="White" Margin="0,10,0,5"/>
+                    <UniformGrid Columns="5" Rows="2">
+                        <Button Background="Black" Click="BrushColor_Click" Tag="Black" Style="{StaticResource ColorButton}"/>
+                        <Button Background="White" Click="BrushColor_Click" Tag="White" Style="{StaticResource ColorButton}"/>
+                        <Button Background="Red" Click="BrushColor_Click" Tag="Red" Style="{StaticResource ColorButton}"/>
+                        <Button Background="Green" Click="BrushColor_Click" Tag="Green" Style="{StaticResource ColorButton}"/>
+                        <Button Background="Blue" Click="BrushColor_Click" Tag="Blue" Style="{StaticResource ColorButton}"/>
+                        <Button Background="Yellow" Click="BrushColor_Click" Tag="Yellow" Style="{StaticResource ColorButton}"/>
+                        <Button Background="Orange" Click="BrushColor_Click" Tag="Orange" Style="{StaticResource ColorButton}"/>
+                        <Button Background="Purple" Click="BrushColor_Click" Tag="Purple" Style="{StaticResource ColorButton}"/>
+                        <Button Background="Pink" Click="BrushColor_Click" Tag="Pink" Style="{StaticResource ColorButton}"/>
+                        <Button Background="Brown" Click="BrushColor_Click" Tag="Brown" Style="{StaticResource ColorButton}"/>
+                    </UniformGrid>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Область изображения -->
+        <Border Grid.Column="1" Background="#2d2d2d">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" 
+                          VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <Image x:Name="MainImage" Stretch="Uniform" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"
+                           MouseLeftButtonDown="Image_MouseDown"
+                           MouseMove="Image_MouseMove"
+                           MouseLeftButtonUp="Image_MouseUp"/>
+                    <Canvas x:Name="SelectionCanvas" Background="Transparent"
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center">
+                        <Rectangle x:Name="SelectionRect" 
+                                   Stroke="Yellow" StrokeThickness="2" 
+                                   StrokeDashArray="4 2" 
+                                   Visibility="Collapsed"/>
+                    </Canvas>
+                </Grid>
+            </ScrollViewer>
+        </Border>
+    </Grid>
 
     <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="#4CAF50"/>
+        <!-- Стили кнопок -->
+        <Style x:Key="ToolButton" TargetType="Button">
+            <Setter Property="Background" Value="#007acc"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#45a049"/>
+                    <Setter Property="Background" Value="#005a9e"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ColorButton" TargetType="Button">
+            <Setter Property="Width" Value="35"/>
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#3f3f3f"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="Yellow"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
-
-    <DockPanel Background="#2b2b2b">
-        <!-- Панель инструментов -->
-        <StackPanel DockPanel.Dock="Top" Background="#3c3c3c" Orientation="Horizontal" 
-                    Height="60">
-
-            <!-- Файловые операции -->
-            <StackPanel Orientation="Horizontal" Margin="5">
-                <Button Content="Новый файл" Click="NewFile_Click" ToolTip="Ctrl+N"/>
-                <Button Content="Открыть" Click="OpenFile_Click"/>
-                <Button Content="Сохранить" Click="SaveFile_Click" ToolTip="Ctrl+S"/>
-            </StackPanel>
-
-            <Separator Width="2" Background="#555" Margin="5,10"/>
-
-            <!-- Инструменты -->
-            <StackPanel Orientation="Horizontal" Margin="5">
-                <Button x:Name="BrushBtn" Content="Кисть" Click="SetBrush_Click" 
-                        Background="#2196F3"/>
-                <Button x:Name="SelectBtn" Content="Выделение" Click="SetSelect_Click"/>
-                <Button x:Name="CropBtn" Content="Обрезка" Click="SetCrop_Click"/>
-            </StackPanel>
-
-            <Separator Width="2" Background="#555" Margin="5,10"/>
-
-            <!-- Размер кисти -->
-            <StackPanel Orientation="Vertical" Margin="10,5">
-                <TextBlock Text="Размер кисти" Foreground="#aaa" FontSize="11"/>
-                <StackPanel Orientation="Horizontal">
-                    <Slider x:Name="BrushSizeSlider" Minimum="1" Maximum="50" Value="5" 
-                            Width="100" ValueChanged="BrushSize_Changed"/>
-                    <TextBlock x:Name="BrushSizeLabel" Text="5" Foreground="White" 
-                               Margin="5,0" VerticalAlignment="Center"/>
-                </StackPanel>
-            </StackPanel>
-
-            <Separator Width="2" Background="#555" Margin="5,10"/>
-
-            <!-- Цвета -->
-            <StackPanel Orientation="Horizontal" Margin="10,5">
-                <Button x:Name="ColorBtn" Width="40" Height="40" 
-                        Background="Black" Click="ColorPicker_Click"/>
-                <Button Width="30" Height="30" Background="Black" 
-                        Click="PresetColor_Click" Tag="#000000"/>
-                <Button Width="30" Height="30" Background="Red" 
-                        Click="PresetColor_Click" Tag="#FF0000"/>
-                <Button Width="30" Height="30" Background="Lime" 
-                        Click="PresetColor_Click" Tag="#00FF00"/>
-                <Button Width="30" Height="30" Background="Blue" 
-                        Click="PresetColor_Click" Tag="#0000FF"/>
-                <Button Width="30" Height="30" Background="Yellow" 
-                        Click="PresetColor_Click" Tag="#FFFF00"/>
-            </StackPanel>
-
-            <Separator Width="2" Background="#555" Margin="5,10"/>
-
-            <!-- Фильтры -->
-            <StackPanel Orientation="Vertical" Margin="10,5">
-                <TextBlock Text="Фильтры" Foreground="#aaa" FontSize="11"/>
-                <ComboBox x:Name="FilterCombo" Width="150" SelectionChanged="Filter_Changed">
-                    <ComboBoxItem Content="Выберите фильтр" IsSelected="True"/>
-                    <ComboBoxItem Content="Размытие" Tag="blur"/>
-                    <ComboBoxItem Content="Ч/Б" Tag="grayscale"/>
-                    <ComboBoxItem Content="Негатив" Tag="negative"/>
-                    <ComboBoxItem Content="Теплый фильтр" Tag="warm"/>
-                    <ComboBoxItem Content="Яркость +30%" Tag="brightness"/>
-                    <ComboBoxItem Content="Контрастность" Tag="contrast"/>
-                </ComboBox>
-            </StackPanel>
-
-            <Separator Width="2" Background="#555" Margin="5,10"/>
-
-            <!-- Поворот -->
-            <StackPanel Orientation="Horizontal" Margin="5">
-                <Button Content="Повернуть ↻" Click="RotateRight_Click"/>
-                <Button Content="Повернуть ↺" Click="RotateLeft_Click"/>
-            </StackPanel>
-
-            <Separator Width="2" Background="#555" Margin="5,10"/>
-
-            <!-- Прочее -->
-            <StackPanel Orientation="Horizontal" Margin="5">
-                <Button Content="Отменить" Click="Undo_Click" ToolTip="Ctrl+Z"/>
-                <Button Content="Очистить" Click="Clear_Click" ToolTip="Ctrl+D"/>
-            </StackPanel>
-        </StackPanel>
-
-        <!-- Статус-бар -->
-        <StatusBar DockPanel.Dock="Bottom" Background="#3c3c3c" Height="25">
-            <TextBlock x:Name="StatusText" Foreground="White" FontSize="12"
-                       Text="Готово | Горячие клавиши: Ctrl+Z, Ctrl+S, Ctrl+D, Ctrl+N"/>
-        </StatusBar>
-
-        <!-- Область рисования -->
-        <Grid Background="#1a1a1a">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" 
-                          VerticalScrollBarVisibility="Auto">
-                <Canvas x:Name="DrawingCanvas" 
-                        Width="800" Height="600" 
-                        Background="White"
-                        MouseDown="Canvas_MouseDown"
-                        MouseMove="Canvas_MouseMove"
-                        MouseUp="Canvas_MouseUp"
-                        Cursor="Cross"/>
-            </ScrollViewer>
-
-            <!-- Рамка выделения -->
-            <Border x:Name="SelectionBorder" 
-                    BorderBrush="#2196F3" 
-                    BorderThickness="2"
-                    Visibility="Collapsed"
-                    IsHitTestVisible="False">
-                <Border.Background>
-                    <SolidColorBrush Color="#2196F3" Opacity="0.1"/>
-                </Border.Background>
-            </Border>
-        </Grid>
-    </DockPanel>
 </Window>
